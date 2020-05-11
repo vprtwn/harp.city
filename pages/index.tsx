@@ -3,7 +3,7 @@ import Head from "next/head";
 const IndexPage = () => (
   <div>
     <Head>
-      <title>Create Next App</title>
+      <title>harp.city</title>
       <link rel="icon" href="/favicon.ico" />
     </Head>
 
