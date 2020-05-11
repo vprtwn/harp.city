@@ -29,21 +29,22 @@ const PlacePage = (props: any) => {
       <Head>
         <title>{place ?? "harp.city"}</title>
       </Head>
-      <div>
+      <div className="w-screen">
         <Draggable
+          bounds="parent"
           defaultPosition={{ x: 200, y: 200 }}
           position={null}
           grid={[50, 50]}
           scale={1}
-          // onStart={handleStart}
           onDrag={handleDrag}
-          // onStop={this.handleStop}
         >
           <div ref={cellRef} className="cell border border-solid border-black">
             <div className="text-xs">{deltaPosition.x.toFixed(0)}</div>
             <div className="text-xs">{deltaPosition.y.toFixed(0)}</div>
           </div>
         </Draggable>
+        <div className="h-screen"></div>
+        <div className="h-screen"></div>
       </div>
     </div>
   );
