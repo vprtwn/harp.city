@@ -4,24 +4,20 @@ import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
 
 const PlacePage = (props: any) => {
-  const [deltaPosition, setDeltaPosition] = useState({
-    x: 0,
-    y: 0,
-  });
+  const [nodes, setNodes] = useState([
+    {
+      x: 200,
+      y: 200,
+    },
+    {
+      x: 50,
+      y: 50,
+    },
+  ]);
 
   const {
     query: { place },
   } = useRouter();
-
-  const cellRef = useRef<HTMLDivElement>(null);
-
-  const handleDrag = (e, ui) => {
-    const { x, y } = deltaPosition;
-    setDeltaPosition({
-      x: x + ui.deltaX,
-      y: y + ui.deltaY,
-    });
-  };
 
   return (
     <div>
@@ -30,19 +26,32 @@ const PlacePage = (props: any) => {
         <title>{place ?? "harp.city"}</title>
       </Head>
       <div className="w-screen">
-        <Draggable
-          bounds="parent"
-          defaultPosition={{ x: 200, y: 200 }}
-          position={null}
-          grid={[50, 50]}
-          scale={1}
-          onDrag={handleDrag}
-        >
-          <div ref={cellRef} className="cell border border-solid border-black">
-            <div className="text-xs">{deltaPosition.x.toFixed(0)}</div>
-            <div className="text-xs">{deltaPosition.y.toFixed(0)}</div>
-          </div>
-        </Draggable>
+        {nodes.map((node, i) => {
+          console.log(node);
+          return (
+            <Draggable
+              key={`draggable_${i}`}
+              bounds="parent"
+              position={{ x: node.x, y: node.y }}
+              onDrag={(e, p) => {
+                let newNodes = [];
+                nodes.forEach((n, index) => {
+                  newNodes[index] = n;
+                });
+                newNodes[i] = {
+                  x: p.x,
+                  y: p.y,
+                };
+                setNodes(newNodes);
+              }}
+            >
+              <div className="cell border border-solid border-black">
+                <div className="text-xs">{node.x}</div>
+                <div className="text-xs">{node.y}</div>
+              </div>
+            </Draggable>
+          );
+        })}
         <div className="h-screen"></div>
         <div className="h-screen"></div>
       </div>
