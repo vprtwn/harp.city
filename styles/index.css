@@ -3,5 +3,7 @@
 @tailwind utilities;
 
 body {
-  @apply bg-blue-500 p-12;
+  @apply p-1;
+  background-size: 40px 40px;
+  background-image: radial-gradient(circle, #222222 1px, transparent 1px);
 }
