@@ -36,7 +36,6 @@ const PlacePage = (props: any) => {
         x: val.x,
         y: val.y,
       };
-      console.log(JSON.stringify(nodes, null, 2));
       setNodes(JSON.parse(JSON.stringify(nodes)));
     });
   }
@@ -51,7 +50,7 @@ const PlacePage = (props: any) => {
         {nodes.map((node, i) => {
           return (
             <Draggable
-              defaultClassName="react-draggable fixed"
+              defaultClassName="react-draggable absolute"
               key={`draggable_${i}`}
               bounds="parent"
               position={{ x: node.x, y: node.y }}
@@ -69,10 +68,11 @@ const PlacePage = (props: any) => {
               }}
               onStop={(e, d) => {
                 let node = nodes[i];
+                node.d = false;
                 gunStore.get(i).put(node);
               }}
             >
-              <div className="cell border border-solid border-black">
+              <div className={`cell border border-solid border-black`}>
                 <div className="text-xs">{node.x}</div>
                 <div className="text-xs">{node.y}</div>
                 <div className="text-xs text-right">{i}</div>
