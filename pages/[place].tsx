@@ -2,6 +2,7 @@ import Head from "next/head";
 import Draggable from "react-draggable";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
+// import "gun/lib/webrtc";
 import Gun from "gun";
 
 // Community relay peers: https://github.com/amark/gun/wiki/volunteer.dht
@@ -18,16 +19,7 @@ const gun = Gun(peers);
 let gunStore = null;
 
 const PlacePage = (props: any) => {
-  const [nodes, setNodes] = useState([
-    // {
-    //   x: 200,
-    //   y: 200,
-    // },
-    // {
-    //   x: 50,
-    //   y: 50,
-    // },
-  ]);
+  const [nodes, setNodes] = useState([]);
 
   const {
     query: { place },
@@ -39,22 +31,15 @@ const PlacePage = (props: any) => {
     const prefix = `harp.city.${process.env.NODE_ENV}.${version}`;
     const nodeName = `${prefix}^${place || ""}`;
     gunStore = gun.get(nodeName);
-    gunStore.map().once((val, msgId) => {
-      let newNodes = [];
-      nodes.forEach((n, index) => {
-        newNodes[index] = n;
-      });
+    gunStore.map().on((val, msgId) => {
       nodes[val.i] = {
         x: val.x,
         y: val.y,
       };
+      console.log(JSON.stringify(nodes, null, 2));
       setNodes(JSON.parse(JSON.stringify(nodes)));
     });
   }
-
-  // useEffect(() => {
-
-  // }, []); // [] = run once
 
   return (
     <div>
@@ -66,6 +51,7 @@ const PlacePage = (props: any) => {
         {nodes.map((node, i) => {
           return (
             <Draggable
+              defaultClassName="react-draggable fixed"
               key={`draggable_${i}`}
               bounds="parent"
               position={{ x: node.x, y: node.y }}
@@ -89,10 +75,26 @@ const PlacePage = (props: any) => {
               <div className="cell border border-solid border-black">
                 <div className="text-xs">{node.x}</div>
                 <div className="text-xs">{node.y}</div>
+                <div className="text-xs text-right">{i}</div>
               </div>
             </Draggable>
           );
         })}
+        <button
+          hidden={nodes.length > 10}
+          className="fixed top-0 left-0 bg-black hover:bg-gray-500 text-white px-2 pb-1"
+          onClick={() => {
+            const i = nodes.length;
+            const node = {
+              i: i,
+              x: 100,
+              y: 100,
+            };
+            gunStore.get(i).put(node);
+          }}
+        >
+          new
+        </button>
         <div className="h-screen"></div>
         <div className="h-screen"></div>
       </div>
