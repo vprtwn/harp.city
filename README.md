@@ -1,1 +1,4 @@
-This is a Next.js + Tailwind + Typescript template project
+## Developing
+
+Run a GunDB server peer locally. You can use this one:
+https://github.com/benzguo/gun.server

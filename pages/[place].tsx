@@ -1,9 +1,11 @@
 import Head from "next/head";
 import Draggable from "react-draggable";
 import { useRouter } from "next/router";
+import { midiToName, midiToTuningSymbol, pxToMidi } from "../utils/transforms";
 import React, { useEffect, useRef, useState } from "react";
-// import "gun/lib/webrtc";
 import Gun from "gun";
+import "gun/lib/webrtc";
+import Tone from "tone";
 
 // Community relay peers: https://github.com/amark/gun/wiki/volunteer.dht
 let peers = [
@@ -45,8 +47,9 @@ const PlacePage = (props: any) => {
       <base target="_blank" />
       <Head>
         <title>{place ?? "harp.city"}</title>
+        <link rel="icon" href="/favicon.png" />
       </Head>
-      <div className="w-screen">
+      <div className="canvas border border-solid border-black">
         {nodes.map((node, i) => {
           return (
             <Draggable
@@ -72,9 +75,16 @@ const PlacePage = (props: any) => {
                 gunStore.get(i).put(node);
               }}
             >
-              <div className={`cell border border-solid border-black`}>
+              <div
+                className={`cell border-solid border-black bg-white ${
+                  !midiToTuningSymbol(pxToMidi(node.y)) ? "border-2" : "border"
+                }`}
+              >
+                <div className="pl-1">
+                  <span className="text-xs">{midiToName(pxToMidi(node.y))}</span>
+                  <sup className="text-xxs">{midiToTuningSymbol(pxToMidi(node.y))}</sup>
+                </div>
                 <div className="text-xs">{node.x}</div>
-                <div className="text-xs">{node.y}</div>
                 <div className="text-xs text-right">{i}</div>
               </div>
             </Draggable>
@@ -95,8 +105,6 @@ const PlacePage = (props: any) => {
         >
           new
         </button>
-        <div className="h-screen"></div>
-        <div className="h-screen"></div>
       </div>
     </div>
   );
