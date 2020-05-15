@@ -5,9 +5,9 @@
 .canvas {
   margin: -1px;
   height: 3000px;
-  width: 1000px;
+  width: 2000px;
   background-size: 50px 50px;
-  background-image: radial-gradient(circle, #222222 1px, transparent 1px);
+  background-image: radial-gradient(circle, #cccccc 1px, black 1px);
 }
 
 .cell {
@@ -16,6 +16,22 @@
   margin: 0px;
   padding: 0px;
   float: left;
+  z-index: 50;
+  border-color: white;
+  background-color: transparent;
+  color: white;
+}
+
+.string-label {
+  position: absolute;
+  /* position: sticky; */
+  /* bottom: 30px; */
+}
+
+.string {
+  position: absolute;
+  width: 2000px;
+  z-index: 0;
 }
 
 .axis {

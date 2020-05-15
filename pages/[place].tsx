@@ -1,11 +1,12 @@
 import Head from "next/head";
 import Draggable from "react-draggable";
 import { useRouter } from "next/router";
-import { midiToName, midiToTuningSymbol, pxToMidi } from "../utils/transforms";
+import { midiToNoteName, midiToTuningSymbol, midiToColorHex, pxToMidi } from "../utils/transforms";
 import React, { useEffect, useRef, useState } from "react";
 import Gun from "gun";
 import "gun/lib/webrtc";
 import Tone from "tone";
+import useWindowScroll from "react-use/lib/useWindowScroll";
 
 // Community relay peers: https://github.com/amark/gun/wiki/volunteer.dht
 let peers = [
@@ -22,6 +23,7 @@ let gunStore = null;
 
 const PlacePage = (props: any) => {
   const [nodes, setNodes] = useState([]);
+  const { x, y } = useWindowScroll();
 
   const {
     query: { place },
@@ -77,20 +79,42 @@ const PlacePage = (props: any) => {
               }}
             >
               <div
-                className={`cell border-solid border-black bg-white ${
-                  !midiToTuningSymbol(pxToMidi(node.y)) ? "border-2" : "border"
-                }`}
+                className={`cell border`}
+                style={{
+                  borderColor: `${midiToColorHex(pxToMidi(node.y))}`,
+                }}
               >
-                <div className="pl-1">
-                  <span className="text-xs">{midiToName(pxToMidi(node.y))}</span>
-                  <sup className="text-xxs">{midiToTuningSymbol(pxToMidi(node.y))}</sup>
-                </div>
-                <div className="text-xs">{node.x}</div>
+                <div className="text-xs text-right">{node.x}</div>
                 <div className="text-xs text-right">{i}</div>
               </div>
             </Draggable>
           );
         })}
+        {nodes.map((node, i) => {
+          return (
+            <div>
+              <div
+                className="string-label pl-1"
+                style={{
+                  top: `${node.y}px`,
+                  left: `${x}px`,
+                  color: `${midiToColorHex(pxToMidi(node.y))}`,
+                }}
+              >
+                <span className="text-xs">{midiToNoteName(pxToMidi(node.y))}</span>
+                <sup className="text-xxs">{midiToTuningSymbol(pxToMidi(node.y))}</sup>
+              </div>
+              <hr
+                className="string"
+                style={{
+                  top: `${node.y}px`,
+                  borderColor: `${midiToColorHex(pxToMidi(node.y))}`,
+                }}
+              />
+            </div>
+          );
+        })}
+
         <button
           hidden={nodes.length > 10}
           className="fixed top-0 left-0 bg-black hover:bg-gray-500 text-white px-2 pb-1"

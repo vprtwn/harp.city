@@ -1,4 +1,5 @@
 import Tone from "tone";
+import chroma from "chroma-js";
 
 const CANVAS_HEIGHT = 3000;
 const CELL_HEIGHT = 50.0;
@@ -36,7 +37,7 @@ export const midiToTuningSymbol = (midi: number): string | null => {
   }
 };
 
-export const midiToName = (midi: number): string => {
+export const midiToNoteName = (midi: number): string => {
   let decimal = midi % 1;
   let base = midi - decimal;
   if (decimal > 0.5) {
@@ -44,4 +45,11 @@ export const midiToName = (midi: number): string => {
     decimal = -(1 - decimal);
   }
   return Tone.Frequency(base, "midi").toNote();
+};
+
+export const midiToColorHex = (midi: number): string => {
+  // https://www.color-hex.com/color-palette/57266
+  const scale = chroma.scale(["#ffd319", "#ff901f", "#ff2975", "#f222ff", "#8c1eff"]);
+  const hex = scale((midi % 12) / 12).hex();
+  return hex;
 };
