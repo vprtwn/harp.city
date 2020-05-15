@@ -47,6 +47,7 @@ const PlacePage = (props: any) => {
       <base target="_blank" />
       <Head>
         <title>{place ?? "harp.city"}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.png" />
       </Head>
       <div className="canvas border border-solid border-black">

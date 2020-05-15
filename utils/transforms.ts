@@ -18,17 +18,17 @@ export const midiToTuningSymbol = (midi: number): string | null => {
   if (decimal.toFixed(2) === "0.00") {
     return;
   } else if (decimal > 0) {
-    if (decimal < 0.1666) {
+    if (decimal < 0.16667) {
       return "↑";
-    } else if (decimal < 0.3333) {
+    } else if (decimal < 0.33333) {
       return "↑↑";
     } else {
       return "↑↑↑";
     }
   } else {
-    if (decimal > -0.1666) {
+    if (decimal > -0.16667) {
       return "↓";
-    } else if (decimal > -0.3333) {
+    } else if (decimal > -0.33333) {
       return "↓↓";
     } else {
       return "↓↓↓";
