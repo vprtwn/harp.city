@@ -11,7 +11,7 @@ body {
   height: 3000px;
   width: 2000px;
   background-size: 50px 50px;
-  background-image: radial-gradient(circle, #cccccc 1px, black 1px);
+  background-image: radial-gradient(circle, #718096 1px, #1a202c 1px);
 }
 
 .cell {

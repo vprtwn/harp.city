@@ -1,12 +1,23 @@
 import Head from "next/head";
 import Draggable from "react-draggable";
 import { useRouter } from "next/router";
-import { midiToNoteName, midiToTuningSymbol, midiToColorHex, pxToMidi } from "../utils/transforms";
+import {
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  CELL_HEIGHT,
+  midiToNoteName,
+  midiToTuningSymbol,
+  mToColor,
+  yToM,
+  xToSep,
+} from "../utils/transforms";
 import React, { useEffect, useRef, useState } from "react";
 import Gun from "gun";
 import "gun/lib/webrtc";
 import Tone from "tone";
 import useWindowScroll from "react-use/lib/useWindowScroll";
+import { Stage, Layer, Text, Line } from "react-konva";
+import Konva from "konva";
 
 // Community relay peers: https://github.com/amark/gun/wiki/volunteer.dht
 let peers = [
@@ -81,11 +92,11 @@ const PlacePage = (props: any) => {
               <div
                 className={`cell border`}
                 style={{
-                  borderColor: `${midiToColorHex(pxToMidi(node.y))}`,
+                  borderColor: `${mToColor(yToM(node.y))}`,
                 }}
               >
-                <div className="text-xs text-right">{node.x}</div>
-                <div className="text-xs text-right">{i}</div>
+                {/* <div className="text-xs text-right">{node.x}</div> */}
+                {/* <div className="text-xs text-right">{i}</div> */}
               </div>
             </Draggable>
           );
@@ -98,19 +109,12 @@ const PlacePage = (props: any) => {
                 style={{
                   top: `${node.y}px`,
                   left: `${x}px`,
-                  color: `${midiToColorHex(pxToMidi(node.y))}`,
+                  color: `${mToColor(yToM(node.y))}`,
                 }}
               >
-                <span className="text-xs">{midiToNoteName(pxToMidi(node.y))}</span>
-                <sup className="text-xxs">{midiToTuningSymbol(pxToMidi(node.y))}</sup>
+                <span className="text-xs">{midiToNoteName(yToM(node.y))}</span>
+                <sup className="text-xxs">{midiToTuningSymbol(yToM(node.y))}</sup>
               </div>
-              <hr
-                className="string"
-                style={{
-                  top: `${node.y}px`,
-                  borderColor: `${midiToColorHex(pxToMidi(node.y))}`,
-                }}
-              />
             </div>
           );
         })}
@@ -130,6 +134,21 @@ const PlacePage = (props: any) => {
         >
           new
         </button>
+
+        <Stage width={CANVAS_WIDTH} height={CANVAS_HEIGHT}>
+          <Layer>
+            {nodes.map((node, i) => {
+              return (
+                <Line
+                  points={[0, node.y + CELL_HEIGHT / 2.0, CANVAS_WIDTH, node.y + CELL_HEIGHT / 2.0]}
+                  stroke={mToColor(yToM(node.y))}
+                  strokeWidth={2}
+                  dash={[2, xToSep(node.x)]}
+                />
+              );
+            })}
+          </Layer>
+        </Stage>
       </div>
     </div>
   );
