@@ -34,7 +34,13 @@ if (process.env.NODE_ENV === "development") {
 const gun = Gun(peers);
 let gunStore = null;
 
+const MAX_SYNTHS = 10;
+
 const PlacePage = (props: any) => {
+  const {
+    query: { place },
+  } = useRouter();
+
   const [nodes, setNodes] = useState([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [selectedY, setSelectedY] = useState<number | null>(null);
@@ -43,10 +49,7 @@ const PlacePage = (props: any) => {
   const scrolling = useScrolling(scrollRef);
   const { x: scrollX, y: scrollY } = useWindowScroll();
   const { width: windowW, height: windowH } = useWindowSize();
-
-  const {
-    query: { place },
-  } = useRouter();
+  const synths = {};
 
   if (place && !gunStore) {
     // initGun
@@ -64,8 +67,37 @@ const PlacePage = (props: any) => {
         nodes[msgId] = null;
       }
       setNodes(JSON.parse(JSON.stringify(nodes)));
+      console.log(nodes.length);
     });
   }
+
+  useEffect(() => {
+    for (let i = 0; i < MAX_SYNTHS; i++) {
+      var synth = new Tone.MonoSynth({
+        oscillator: {
+          type: "sine",
+        },
+        envelope: {
+          attack: 0.1,
+        },
+      }).toMaster();
+      synths[`${i}`] = synth;
+    }
+
+    function triggerSynth(time) {
+      //the time is the sample-accurate time of the event
+      synth.triggerAttackRelease("C3", "8n", time);
+    }
+
+    //schedule a few notes
+    Tone.Transport.scheduleRepeat(triggerSynth, "1.6");
+
+    //set the transport to repeat
+    Tone.Transport.loopEnd = `${CANVAS_WIDTH / 100.0}`;
+    Tone.Transport.loop = true;
+
+    Tone.Transport.start();
+  }, []);
 
   useEffect(() => {
     if (selected !== null) {
@@ -143,17 +175,30 @@ const PlacePage = (props: any) => {
           ) : null;
         })}
 
-        <div className={`fixed p-3 top-0 ${dragging ? "invisible" : null} z-50`}>
+        <div
+          hidden={nodes.length > MAX_SYNTHS}
+          className={`fixed p-3 top-0 ${dragging ? "invisible" : null} z-50`}
+        >
           <button
             className="hover:bg-gray-800 text-gray-600 border rounded border-gray-600 text-lg px-5 py-2"
             onClick={() => {
-              const i = nodes.length;
               const node = {
                 x: 0.5 * windowW + scrollX - 0.5 * CELL_HEIGHT,
                 y: 0.5 * windowH + scrollY - 0.5 * CELL_HEIGHT,
               };
-              gunStore.get(i).put(node);
-              setSelected(i);
+              var addedNode = false;
+              nodes.forEach((n, i) => {
+                if (n === null) {
+                  gunStore.get(i).put(node);
+                  setSelected(i);
+                  addedNode = true;
+                }
+              });
+              if (!addedNode) {
+                const l = nodes.length;
+                gunStore.get(l).put(node);
+                setSelected(l);
+              }
             }}
           >
             +□
