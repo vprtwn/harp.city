@@ -5,11 +5,14 @@ import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   CELL_HEIGHT,
-  midiToNoteName,
-  midiToTuningSymbol,
+  mToNote,
+  mToMicroSym,
   mToColor,
   yToM,
+  yToFreq,
+  yToStringY,
   xToSep,
+  xToS,
 } from "../utils/transforms";
 import React, { useEffect, useRef, useState } from "react";
 import Gun from "gun";
@@ -18,8 +21,7 @@ import Tone from "tone";
 import useWindowScroll from "react-use/lib/useWindowScroll";
 import useWindowSize from "react-use/lib/useWindowSize";
 import useScrolling from "react-use/lib/useScrolling";
-import { Stage, Layer, Text, Line } from "react-konva";
-import Konva from "konva";
+import { Stage, Layer, Line } from "react-konva";
 
 // Community relay peers: https://github.com/amark/gun/wiki/volunteer.dht
 let peers = [
@@ -34,7 +36,7 @@ if (process.env.NODE_ENV === "development") {
 const gun = Gun(peers);
 let gunStore = null;
 
-const MAX_SYNTHS = 10;
+const MAX_SYNTHS = 8;
 
 const PlacePage = (props: any) => {
   const {
@@ -49,11 +51,11 @@ const PlacePage = (props: any) => {
   const scrolling = useScrolling(scrollRef);
   const { x: scrollX, y: scrollY } = useWindowScroll();
   const { width: windowW, height: windowH } = useWindowSize();
-  const synths = {};
+  const [voices, setVoices] = useState([]);
 
   if (place && !gunStore) {
     // initGun
-    const version = "2020.5.11.0";
+    const version = "2020.5.16.0";
     const prefix = `harp.city.${process.env.NODE_ENV}.${version}`;
     const nodeName = `${prefix}^${place || ""}`;
     gunStore = gun.get(nodeName);
@@ -67,36 +69,30 @@ const PlacePage = (props: any) => {
         nodes[msgId] = null;
       }
       setNodes(JSON.parse(JSON.stringify(nodes)));
-      console.log(nodes.length);
     });
   }
 
   useEffect(() => {
+    var vs = [];
     for (let i = 0; i < MAX_SYNTHS; i++) {
+      var trem = new Tone.Tremolo({ frequency: 10, depth: 1.0, spread: 0, type: "sawtooth" })
+        .toMaster()
+        .start();
       var synth = new Tone.MonoSynth({
         oscillator: {
-          type: "sine",
+          type: "triangle",
         },
         envelope: {
-          attack: 0.1,
+          attack: 0.005,
+          decay: 0.1,
+          sustain: 0.3,
+          release: 1,
         },
-      }).toMaster();
-      synths[`${i}`] = synth;
+        volume: -32,
+      }).connect(trem);
+      vs.push({ synth: synth, tremolo: trem });
     }
-
-    function triggerSynth(time) {
-      //the time is the sample-accurate time of the event
-      synth.triggerAttackRelease("C3", "8n", time);
-    }
-
-    //schedule a few notes
-    Tone.Transport.scheduleRepeat(triggerSynth, "1.6");
-
-    //set the transport to repeat
-    Tone.Transport.loopEnd = `${CANVAS_WIDTH / 100.0}`;
-    Tone.Transport.loop = true;
-
-    Tone.Transport.start();
+    setVoices(vs);
   }, []);
 
   useEffect(() => {
@@ -106,7 +102,28 @@ const PlacePage = (props: any) => {
     } else {
       setSelectedY(null);
     }
+    nodes.forEach((n, i) => {
+      if (n === null) {
+        var voice = voices[i];
+        if (!voice) {
+          return;
+        }
+        voice.synth.triggerRelease();
+        voices[i] = null;
+      } else {
+        var voice = voices[i];
+        if (!voice) {
+          return;
+        }
+        voice.synth.triggerRelease();
+        voice.synth.triggerAttack(yToFreq(n.y), 1.0 / MAX_SYNTHS / 100);
+        voice.tremolo.frequency.value = 1.0 / xToS(n.x);
+        voices[i] = voice;
+      }
+    });
   }, [selected, nodes]);
+
+  useEffect(() => {}, [nodes]);
 
   return (
     <div>
@@ -116,12 +133,15 @@ const PlacePage = (props: any) => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.png" />
       </Head>
+      <div className="text-center text-gray-600">
+        <div className="p-5 mb-5">{place ?? "harp.city"}</div>
+      </div>
       <div ref={scrollRef} className="canvas border border-solid">
         {nodes.map((node, i) => {
           return node ? (
             <Draggable
               defaultClassName="react-draggable absolute"
-              key={`draggable_${i}`}
+              key={`cell_${i}`}
               bounds="parent"
               position={{ x: node.x, y: node.y }}
               onDrag={(e, p) => {
@@ -153,41 +173,47 @@ const PlacePage = (props: any) => {
                   backgroundColor:
                     selected === i ? `${mToColor(yToM(selectedY))}88` : `transparent`,
                 }}
-              ></div>
+              >
+                {/* <span className="text-xs">{yToFreq(node.y).toFixed(2)}</span> */}
+                {/* <span className="text-xs">{xToS(node.x).toFixed(2)}</span> */}
+              </div>
             </Draggable>
           ) : null;
         })}
         {nodes.map((node, i) => {
           return node ? (
-            <div>
-              <div
-                className="string-label pl-1"
-                style={{
-                  top: `${node.y}px`,
-                  left: `${scrollX}px`,
-                  color: `${mToColor(yToM(node.y))}`,
-                }}
-              >
-                <span className="text-xs">{midiToNoteName(yToM(node.y))}</span>
-                <sup className="text-xxs">{midiToTuningSymbol(yToM(node.y))}</sup>
-              </div>
+            <div
+              key={`string-label_${i}`}
+              className="string-label pl-1"
+              style={{
+                top: `${node.y}px`,
+                left: `${scrollX}px`,
+                color: `${mToColor(yToM(node.y))}`,
+              }}
+            >
+              <span className="text-xs">{mToNote(yToM(node.y))}</span>
+              <sup className="text-xxs">{mToMicroSym(yToM(node.y))}</sup>
             </div>
           ) : null;
         })}
 
         <div
-          hidden={nodes.length > MAX_SYNTHS}
-          className={`fixed p-3 top-0 ${dragging ? "invisible" : null} z-50`}
+          hidden={nodes.filter((n) => n !== null).length > MAX_SYNTHS}
+          className={`toolbar p-3 ${dragging ? "invisible" : null} z-50`}
         >
           <button
-            className="hover:bg-gray-800 text-gray-600 border rounded border-gray-600 text-lg px-5 py-2"
+            className="hover:bg-gray-800 text-gray-600 border rounded border-gray-600 text-xl px-5 py-2"
             onClick={() => {
+              const y = 100;
               const node = {
-                x: 0.5 * windowW + scrollX - 0.5 * CELL_HEIGHT,
-                y: 0.5 * windowH + scrollY - 0.5 * CELL_HEIGHT,
+                x: 0.5 * windowW + scrollX,
+                y: y,
               };
               var addedNode = false;
               nodes.forEach((n, i) => {
+                if (addedNode) {
+                  return;
+                }
                 if (n === null) {
                   gunStore.get(i).put(node);
                   setSelected(i);
@@ -201,13 +227,13 @@ const PlacePage = (props: any) => {
               }
             }}
           >
-            +□
+            +
           </button>
         </div>
         <div className={`fixed p-3 top-0 right-0 ${dragging ? "invisible" : null} z-50`}>
           <button
             hidden={selected === null}
-            className="ml-3 hover:bg-gray-800 text-white border-2 rounded border-white text-lg px-5 py-2"
+            className="ml-3 hover:bg-gray-800 text-white border-2 rounded border-white text-xl px-5 py-2"
             style={{
               borderColor: mToColor(yToM(selectedY)),
               color: mToColor(yToM(selectedY)),
@@ -217,7 +243,7 @@ const PlacePage = (props: any) => {
               setSelected(null);
             }}
           >
-            -□
+            –
           </button>
         </div>
 
@@ -226,9 +252,10 @@ const PlacePage = (props: any) => {
             {nodes.map((node, i) => {
               return node ? (
                 <Line
-                  points={[0, node.y + 0.5 * CELL_HEIGHT, CANVAS_WIDTH, node.y + 0.5 * CELL_HEIGHT]}
+                  key={`string_${i}`}
+                  points={[0, yToStringY(node.y), CANVAS_WIDTH, yToStringY(node.y)]}
                   stroke={mToColor(yToM(node.y))}
-                  strokeWidth={2}
+                  strokeWidth={10}
                   dash={[2, xToSep(node.x)]}
                 />
               ) : null;
