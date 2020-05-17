@@ -143,7 +143,7 @@ const PlacePage = (props: any) => {
           ) : null;
         })}
 
-        <div className={`fixed top-0 ${dragging ? "invisible" : null} z-50`}>
+        <div className={`fixed p-3 top-0 ${dragging ? "invisible" : null} z-50`}>
           <button
             className="hover:bg-gray-800 text-gray-600 border rounded border-gray-600 text-lg px-5 py-2"
             onClick={() => {
@@ -159,7 +159,7 @@ const PlacePage = (props: any) => {
             +□
           </button>
         </div>
-        <div className={`fixed top-0 right-0 ${dragging ? "invisible" : null} z-50`}>
+        <div className={`fixed p-3 top-0 right-0 ${dragging ? "invisible" : null} z-50`}>
           <button
             hidden={selected === null}
             className="ml-3 hover:bg-gray-800 text-white border-2 rounded border-white text-lg px-5 py-2"
