@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  background-color: black;
+  background-color: #151a23;
 }
 
 .canvas {
@@ -11,7 +11,8 @@ body {
   height: 3000px;
   width: 2000px;
   background-size: 50px 50px;
-  background-image: radial-gradient(circle, #718096 1px, #1a202c 1px);
+  background-image: radial-gradient(circle, #718096 1px, #151a23 1px);
+  border-color: #718096;
 }
 
 .cell {
@@ -20,7 +21,7 @@ body {
   margin: 0px;
   padding: 0px;
   float: left;
-  z-index: 50;
+  z-index: 30;
   border-color: white;
   background-color: transparent;
   color: white;
@@ -28,8 +29,6 @@ body {
 
 .string-label {
   position: absolute;
-  /* position: sticky; */
-  /* bottom: 30px; */
 }
 
 .string {
