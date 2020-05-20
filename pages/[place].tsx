@@ -22,6 +22,7 @@ import useWindowScroll from "react-use/lib/useWindowScroll";
 import useWindowSize from "react-use/lib/useWindowSize";
 import useScrolling from "react-use/lib/useScrolling";
 import { Stage, Layer, Line } from "react-konva";
+import Konva from "konva";
 
 // Community relay peers: https://github.com/amark/gun/wiki/volunteer.dht
 let peers = [
@@ -37,6 +38,7 @@ const gun = Gun(peers);
 let gunStore = null;
 
 const MAX_SYNTHS = 8;
+Konva.pixelRatio = 1;
 
 const PlacePage = (props: any) => {
   const {
@@ -247,8 +249,8 @@ const PlacePage = (props: any) => {
           </button>
         </div>
 
-        <Stage width={CANVAS_WIDTH} height={CANVAS_HEIGHT}>
-          <Layer>
+        <Stage width={CANVAS_WIDTH} height={CANVAS_HEIGHT} perfectDrawEnabled={false}>
+          <Layer perfectDrawEnabled={false}>
             {nodes.map((node, i) => {
               return node ? (
                 <Line
@@ -257,6 +259,7 @@ const PlacePage = (props: any) => {
                   stroke={mToColor(yToM(node.y))}
                   strokeWidth={10}
                   dash={[2, xToSep(node.x)]}
+                  perfectDrawEnabled={false}
                 />
               ) : null;
             })}
